@@ -5,8 +5,11 @@
  * this file and include it in basic-server.js so that it actually works.
  * *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html. */
 var path = require("path");
+var messages = [];
+
 
 module.exports = function(request, response) {
+  
   /* the 'request' argument comes from nodes http module. It includes info about the
   request - such as what URL the browser is requesting. */
 
@@ -15,6 +18,7 @@ module.exports = function(request, response) {
 
   console.log("Serving request type " + request.method + " for url " + request.url);
   var statusCode = 200;
+  
 
   /* Without this line, this server wouldn't work. See the note
    * below about CORS. */
@@ -28,21 +32,53 @@ module.exports = function(request, response) {
    * anything back to the client until you do. The string you pass to
    * response.end() will be the body of the response - i.e. what shows
    * up in the browser.*/
-  switch (request.url) {
-    case '/':
-      response.writeHead(statusCode, headers);
-      response.end("HELLO NODE");
-      break;
 
-    case '/1/classes/messages':
-      response.writeHead(statusCode, headers);
-      response.end("MESSAGES");
-      break;
+  if ( request.url.indexOf( '/classes/' ) === -1 ) {
+    response.writeHead( 404, headers );
+    response.end( 'error' );
+
+  } else if ( request.method === "GET" ) {
+    response.writeHead( 200, headers );
+    response.end( JSON.stringify({ results: messages }) );
     
+
+  } else if ( request.method === "POST" ) {
+      var body = '';
+
+      request.on('data', function (chunk) {
+        body += chunk;
+        messages.push( JSON.parse(body) );
+      });
+
+      response.writeHead( 201, headers );
+      response.end();
   }
 
-  //response.end("Hello, World!");
-  // 
+
+
+
+
+
+  if (request.method === 'OPTIONS') {
+    response.writeHead( 200, headers );
+    response.end();
+  }
+
+  if ( request.url === '/classes/messages' && request.method === 'GET' ) {
+    response.writeHead( 200, headers );
+    response.end( JSON.stringify({ results: messages }) );
+  } else if ( request.method === 'POST' ) {
+    var body = '';
+
+    request.on('data', function (chunk) {
+      body += chunk;
+      messages.push( JSON.parse(body) );
+    });
+
+    response.writeHead( 201, headers );
+    response.end();
+  }
+
 };
 
 /* These headers will allow Cross-Origin Resource Sharing (CORS).

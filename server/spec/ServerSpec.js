@@ -1,4 +1,4 @@
-var handler = require('../request-handler');
+var handler = { handler: require('../request-handler') };
 var expect = require('../../node_modules/chai/chai').expect;
 var basicServer = require('../basic-server').server;
 var stubs = require('./Stubs');
@@ -82,6 +82,7 @@ it('Should respond with messages that were previously posted', function() {
       message: 'Do my bidding!'
     };
     var req = new stubs.request('/classes/room1', 'POST', stubMsg);
+
     var res = new stubs.response();
 
     handler.handler(req, res);
@@ -95,7 +96,11 @@ it('Should respond with messages that were previously posted', function() {
     handler.handler(req, res);
 
     expect(res._responseCode).to.equal(200);
+    
+
     var messages = JSON.parse(res._data).results;
+    
+
     expect(messages.length).to.be.above(0);
     expect(messages[0].username).to.equal('Jono');
     expect(messages[0].message).to.equal('Do my bidding!');
